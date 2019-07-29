@@ -105,4 +105,14 @@ open class NotificationBannerQueue: NSObject {
     public func removeAll() {
         banners.removeAll()
     }
+    
+    /**
+        Removes all notification banners from the queue except currently displaying one
+     */
+    public func removePendings() {
+        
+        for banner in banners {
+            banner.remove()
+        }
+    }
 }

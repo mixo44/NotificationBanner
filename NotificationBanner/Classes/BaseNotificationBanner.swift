@@ -26,6 +26,14 @@ public protocol NotificationBannerDelegate: class {
     func notificationBannerDidAppear(_ banner: BaseNotificationBanner)
     func notificationBannerWillDisappear(_ banner: BaseNotificationBanner)
     func notificationBannerDidDisappear(_ banner: BaseNotificationBanner)
+    func notificationBannerShouldShowStatusBar(_ banner: BaseNotificationBanner) -> Bool
+}
+
+public extension NotificationBannerDelegate {
+    
+    func notificationBannerShouldShowStatusBar(_ banner: BaseNotificationBanner) -> Bool {
+        return true
+    }
 }
 
 @objcMembers
@@ -287,11 +295,27 @@ open class BaseNotificationBanner: UIView {
             self.delegate?.notificationBannerDidDisappear(self)
             
             self.bannerQueue.showNext(callback: { (isEmpty) in
-                if isEmpty || self.statusBarShouldBeShown() {
+                
+                let statusBarShouldBeShown = self.delegate?.notificationBannerShouldShowStatusBar(self) ?? true
+                
+                if (isEmpty || self.statusBarShouldBeShown()) && statusBarShouldBeShown {
                     self.appWindow.windowLevel = UIWindow.Level.normal
                 }
             })
         }
+    }
+    
+    /**
+     Hides notifiaction banner if suspended
+     */
+    private func hide() {
+        
+        guard isSuspended else {
+            return
+        }
+        
+        self.removeFromSuperview()
+        self.isSuspended = false
     }
     
     /**
@@ -302,6 +326,8 @@ open class BaseNotificationBanner: UIView {
         guard !isDisplaying else {
             return
         }
+        
+        hide()
         
         bannerQueue.removeBanner(self)
     }
@@ -414,9 +440,9 @@ open class BaseNotificationBanner: UIView {
     func suspend() {
         if autoDismiss {
             NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(dismiss), object: nil)
-            isSuspended = true
-            isDisplaying = false
         }
+        isSuspended = true
+        isDisplaying = false
     }
     
     /**
@@ -425,9 +451,9 @@ open class BaseNotificationBanner: UIView {
     func resume() {
         if autoDismiss {
             self.perform(#selector(dismiss), with: nil, afterDelay: self.duration)
-            isSuspended = false
-            isDisplaying = true
         }
+        isSuspended = false
+        isDisplaying = true
     }
  
     /**
