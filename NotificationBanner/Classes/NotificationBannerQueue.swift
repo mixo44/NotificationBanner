@@ -64,11 +64,12 @@ open class NotificationBannerQueue: NSObject {
             }
 
         } else {
-            banner.show(placeOnQueue: false, bannerPosition: bannerPosition)
-
-            if let firstBanner = firstNotDisplayedBanner() {
+            
+            if let firstBanner = firstDisplayedBanner() {
                 firstBanner.suspend()
             }
+            
+            banner.show(placeOnQueue: false, bannerPosition: bannerPosition)
 
             banners.insert(banner, at: 0)
         }
@@ -117,6 +118,10 @@ open class NotificationBannerQueue: NSObject {
 
     func firstNotDisplayedBanner() -> BaseNotificationBanner? {
         return banners.filter { !$0.isDisplaying }.first
+    }
+    
+    func firstDisplayedBanner() -> BaseNotificationBanner? {
+        return banners.filter { $0.isDisplaying }.first
     }
 
     /**
